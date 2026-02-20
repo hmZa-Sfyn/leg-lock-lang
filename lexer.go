@@ -16,6 +16,8 @@ const (
 	TokenLabelDef
 	TokenComma
 	TokenComment
+	TokenLBracket // [
+	TokenRBracket // ]
 	TokenEOF
 )
 
@@ -75,6 +77,20 @@ func Lex(code string) ([]Token, *AsmError) {
 				continue
 			}
 
+			if c == '[' {
+				tokens = append(tokens, Token{TokenLBracket, "[", lineNum, col})
+				i++
+				col++
+				continue
+			}
+
+			if c == ']' {
+				tokens = append(tokens, Token{TokenRBracket, "]", lineNum, col})
+				i++
+				col++
+				continue
+			}
+
 			if unicode.IsLetter(c) {
 				// Instruction, register, or label
 				start := i
@@ -84,9 +100,12 @@ func Lex(code string) ([]Token, *AsmError) {
 				value := line[start:i]
 				col += i - start
 
-				if strings.ToLower(value) == "mov" || strings.ToLower(value) == "add" || strings.ToLower(value) == "sub" || strings.ToLower(value) == "jmp" || strings.ToLower(value) == "syscall" {
+				lowerValue := strings.ToLower(value)
+				if lowerValue == "mov" || lowerValue == "add" || lowerValue == "sub" || lowerValue == "jmp" ||
+					lowerValue == "syscall" || lowerValue == "cmp" || lowerValue == "jz" || lowerValue == "jnz" ||
+					lowerValue == "je" || lowerValue == "jne" || lowerValue == "jg" || lowerValue == "jl" {
 					tokens = append(tokens, Token{TokenInstruction, value, lineNum, start + 1})
-				} else if strings.HasPrefix(strings.ToLower(value), "r") && len(value) > 1 && unicode.IsDigit(rune(value[1])) {
+				} else if strings.HasPrefix(lowerValue, "r") && len(value) > 1 && unicode.IsDigit(rune(value[1])) {
 					tokens = append(tokens, Token{TokenRegister, value, lineNum, start + 1})
 				} else {
 					tokens = append(tokens, Token{TokenLabel, value, lineNum, start + 1})

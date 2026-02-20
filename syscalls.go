@@ -13,6 +13,13 @@ func handleSyscall(vm *VM) error {
 		os.Exit(vm.Registers[1])
 	case 1: // Print int
 		fmt.Println(vm.Registers[1])
+	case 2: // Read int (new: simple stdin read to r1)
+		var input int
+		_, err := fmt.Scan(&input)
+		if err != nil {
+			return err
+		}
+		vm.Registers[1] = input
 	default:
 		return fmt.Errorf("unknown syscall: %d", syscallNum)
 	}
